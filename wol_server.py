@@ -67,8 +67,8 @@ class WoLHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json_response(response, 400)
                 return
             
-            # Send magic packet using wakeonlan
-            cmd = ['wakeonlan', '-i', CONFIG["BROADCAST_IP"], CONFIG["PC_MAC_ADDRESS"]]
+            # Send magic packet using wol
+            cmd = ['wol', '-i', CONFIG["BROADCAST_IP"], CONFIG["PC_MAC_ADDRESS"]]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0:
@@ -85,7 +85,7 @@ class WoLHandler(http.server.SimpleHTTPRequestHandler):
                     "message": f"Failed to send packet: {result.stderr.strip()}",
                     "timestamp": datetime.now().isoformat()
                 }
-                logging.error(f"wakeonlan failed: {result.stderr}")
+                logging.error(f"wol failed: {result.stderr}")
                 self.send_json_response(response, 500)
                 
         except subprocess.TimeoutExpired:
@@ -94,7 +94,7 @@ class WoLHandler(http.server.SimpleHTTPRequestHandler):
                 "message": "Command timeout",
                 "timestamp": datetime.now().isoformat()
             }
-            logging.error("wakeonlan command timed out")
+            logging.error("wol command timed out")
             self.send_json_response(response, 500)
         except Exception as e:
             response = {
@@ -143,12 +143,12 @@ class WoLHandler(http.server.SimpleHTTPRequestHandler):
 def main():
     PORT = CONFIG["PORT"]
     
-    # Check if wakeonlan is available
+    # Check if wol is available
     try:
-        subprocess.run(['wakeonlan'], capture_output=True)
+        subprocess.run(['wol'], capture_output=True)
     except FileNotFoundError:
-        print("Error: 'wakeonlan' command not found. Please install it:")
-        print("  pkg install wakeonlan")
+        print("Error: 'wol' command not found. Please install it:")
+        print("  pkg install wol")
         exit(1)
     
     print(f"Starting WoL Server on port {PORT}")

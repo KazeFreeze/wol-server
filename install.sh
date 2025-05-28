@@ -12,7 +12,7 @@ pkg update && pkg upgrade -y
 
 # Install required packages
 echo "📦 Installing required packages..."
-pkg install -y python nodejs-lts wakeonlan termux-api git curl
+pkg install -y python nodejs-lts wol termux-api git curl
 
 # Create config if it doesn't exist
 if [ ! -f "config.py" ]; then

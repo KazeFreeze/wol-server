@@ -101,10 +101,10 @@ Create a Tasker task with HTTP Request action:
 
 ## Troubleshooting
 
-1. **Check if wakeonlan is installed:**
+1. **Check if wol is installed:**
 
    ```bash
-   wakeonlan
+   wol
    ```
 
 2. **Test locally:**
