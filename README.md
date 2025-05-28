@@ -17,7 +17,7 @@ A simple HTTP server that sends Wake-on-LAN magic packets to wake up your PC rem
 1. **Clone this repository:**
 
    ```bash
-   git clone https://github.com/yourusername/wol-server.git
+   git clone https://github.com/KazeFreeze/wol-server.git
    cd wol-server
    ```
 
