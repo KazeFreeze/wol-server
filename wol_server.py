@@ -17,7 +17,7 @@ except ImportError:
     print("   Please copy config_template.py to config.py and edit it")
     CONFIG = {
         "PORT": 6969,
-        "PC_MAC_ADDRESS": "2C-F0-5D-57-5C-63",  # Replace with your PC's MAC address
+        "PC_MAC_ADDRESS": "2C:F0:5D:57:5C:63",  # Replace with your PC's MAC address
         "BROADCAST_IP": "192.168.254.255",       # Replace with your network's broadcast IP
         "LOG_ENABLED": True
     }
@@ -67,17 +67,20 @@ class WoLHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json_response(response, 400)
                 return
             
+            # Normalize MAC address format (wol prefers colons)
+            mac_address = self.normalize_mac_address(CONFIG["PC_MAC_ADDRESS"])
+            
             # Send magic packet using wol
-            cmd = ['wol', '-i', CONFIG["BROADCAST_IP"], CONFIG["PC_MAC_ADDRESS"]]
+            cmd = ['wol', '-i', CONFIG["BROADCAST_IP"], mac_address]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0:
                 response = {
                     "status": "success", 
-                    "message": f"Magic packet sent to {CONFIG['PC_MAC_ADDRESS']}",
+                    "message": f"Magic packet sent to {mac_address}",
                     "timestamp": datetime.now().isoformat()
                 }
-                logging.info(f"Magic packet sent successfully to {CONFIG['PC_MAC_ADDRESS']}")
+                logging.info(f"Magic packet sent successfully to {mac_address}")
                 self.send_json_response(response, 200)
             else:
                 response = {
@@ -124,6 +127,28 @@ class WoLHandler(http.server.SimpleHTTPRequestHandler):
             "log_enabled": CONFIG["LOG_ENABLED"]
         }
         self.send_json_response(response, 200)
+    
+    def normalize_mac_address(self, mac):
+        """
+        Normalize MAC address to colon-separated format that wol prefers.
+        Accepts formats: XX:XX:XX:XX:XX:XX, XX-XX-XX-XX-XX-XX, XXXXXXXXXXXX
+        """
+        # Remove any separators and convert to uppercase
+        clean_mac = mac.replace(':', '').replace('-', '').replace(' ', '').upper()
+        
+        # Validate length
+        if len(clean_mac) != 12:
+            raise ValueError(f"Invalid MAC address length: {mac}")
+        
+        # Validate hex characters
+        try:
+            int(clean_mac, 16)
+        except ValueError:
+            raise ValueError(f"Invalid MAC address characters: {mac}")
+        
+        # Format with colons (preferred by wol command)
+        formatted_mac = ':'.join([clean_mac[i:i+2] for i in range(0, 12, 2)])
+        return formatted_mac
     
     def send_json_response(self, data, status_code=200):
         self.send_response(status_code)
